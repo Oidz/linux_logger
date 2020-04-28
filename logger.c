@@ -129,6 +129,9 @@ void log_r(const char *driver) {
       case(42):
 	print_safe(fp, "KEY_LEFTSHIFT");
 	break;
+      case(57):
+	print_safe(fp, "KEY_SPACE");
+	break;
       default:
 	fflush(fp);
 	fprintf(fp, "%c\n", map[ev.code]);
