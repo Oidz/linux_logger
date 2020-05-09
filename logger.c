@@ -13,21 +13,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <thread>
+#include <pthread.h>
 
 #define LOGFILE "/tmp/data"
 
 // sets the event handler
 char* set_input();
 
-// start the logging thread
+// starts the logging thread
 void log_r(const char *driver);
 
 // timestamps the logfile
 void delimit(FILE *fp);
 
 // bundled flushing and printing into a function
-// FIXME: this adds overhead but necessary for a/a+
+// FIXME: this adds overhead but is necessary for a/a+
 void print_safe(FILE *fp, const char *data);
 
 // maps enum variants to codes from the event struct to handle without
@@ -45,10 +45,8 @@ int main(int argc, char **argv) {
   char *driver = set_input();
 
   // log from character device driver
-  if(driver) {
-      std::thread run_log(log_r, driver);
-      run_log.join();   
-  }
+  if(driver)
+    log_r(driver);
 
  
     // separate delimit() function call from here based
