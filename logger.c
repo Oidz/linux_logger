@@ -13,13 +13,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <thread>
 
 #define LOGFILE "/tmp/data"
 
 // sets the event handler
 char* set_input();
 
-// log loop
+// start the logging thread
 void log_r(const char *driver);
 
 // timestamps the logfile
@@ -41,11 +42,16 @@ int main(int argc, char **argv) {
   // add remote logging functionality
 
   // find the keyboard driver
-  char *driver = set_input(driver);
+  char *driver = set_input();
 
   // log from character device driver
-  if(driver)
-    log_r(driver); // separate delimit() function call from here based
+  if(driver) {
+      std::thread run_log(log_r, driver);
+      run_log.join();   
+  }
+
+ 
+    // separate delimit() function call from here based
   // on time elapsed between log entries */
 }
 
@@ -56,7 +62,7 @@ char* set_input() {
   if(!fptr)
     return "ERR: failure";
   
-  char *driver = malloc(500 * sizeof(char));
+  char *driver = (char*)malloc(500 * sizeof(char));
   strcpy(driver, "/dev/input/");
   
   const char *s = "keyboard";
